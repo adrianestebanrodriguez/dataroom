@@ -4,6 +4,7 @@ import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 import LinkedInProvider from "next-auth/providers/linkedin";
@@ -38,6 +39,33 @@ export const config = {
 
 function getProviders(): NextAuthOptions["providers"] {
   const list: NonNullable<NextAuthOptions["providers"]> = [];
+  if (process.env.ADMIN_PASSWORD) {
+    list.push(
+      CredentialsProvider({
+        id: "master-password",
+        name: "Password",
+        credentials: {
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+          if (
+            !credentials?.password ||
+            credentials.password !== process.env.ADMIN_PASSWORD
+          ) {
+            return null;
+          }
+          const email = process.env.ADMIN_EMAIL || "admin@local.host";
+          let user = await prisma.user.findUnique({ where: { email } });
+          if (!user) {
+            user = await prisma.user.create({
+              data: { email, name: "Admin" },
+            });
+          }
+          return { id: user.id, email: user.email, name: user.name };
+        },
+      }),
+    );
+  }
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     list.push(
       GoogleProvider({

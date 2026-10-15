@@ -34,6 +34,9 @@ export default function Login() {
   const [emailButtonText, setEmailButtonText] = useState<string>(
     "Continue with Email",
   );
+  const [password, setPassword] = useState<string>("");
+  const passwordAuthEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_PASSWORD_AUTH === "true";
 
   const emailSchema = z
     .string()
@@ -134,6 +137,50 @@ export default function Login() {
               {lastUsed === "credentials" && <LastUsed />}
             </div>
           </form>
+          {passwordAuthEnabled ? (
+            <form
+              className="flex flex-col gap-4 px-4 pt-4 sm:px-12"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!password) {
+                  toast.error("Enter your password.");
+                  return;
+                }
+                setClickedMethod("password" as AuthMethod);
+                signIn("master-password", {
+                  password,
+                  redirect: true,
+                  callbackUrl:
+                    next && next.length > 0 ? (next as string) : "/dashboard",
+                }).then((res) => {
+                  if (res?.error) {
+                    toast.error("Wrong password, try again?");
+                  }
+                  setClickedMethod(undefined);
+                });
+              }}
+            >
+              <Label className="sr-only" htmlFor="master-password">
+                Password
+              </Label>
+              <Input
+                id="master-password"
+                placeholder="Master password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="flex h-10 w-full rounded-md border-0 bg-background bg-white px-3 py-2 text-sm text-gray-900 ring-1 ring-gray-200 transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white"
+              />
+              <Button
+                type="submit"
+                disabled={!password || !!clickedMethod}
+                className="focus:shadow-outline w-full transform rounded bg-black px-4 py-2 text-white transition-colors duration-300 ease-in-out focus:outline-none"
+              >
+                Continue with Password
+              </Button>
+            </form>
+          ) : null}
           <p className="py-4 text-center">or</p>
           <div className="flex flex-col space-y-2 px-4 sm:px-12">
             <div className="relative">
