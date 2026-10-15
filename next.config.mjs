@@ -145,8 +145,9 @@ const nextConfig = {
     return { beforeFiles, afterFiles, fallback: [] };
   },
   async redirects() {
-    const redirects = [
-      {
+    const redirects = [];
+    if (process.env.NEXT_PUBLIC_APP_BASE_HOST) {
+      redirects.push({
         source: "/",
         destination: "/dashboard",
         permanent: false,
@@ -156,7 +157,9 @@ const nextConfig = {
             value: process.env.NEXT_PUBLIC_APP_BASE_HOST,
           },
         ],
-      },
+      });
+    }
+    redirects.push(
       {
         source: "/settings",
         destination: "/settings/general",
@@ -175,7 +178,7 @@ const nextConfig = {
         permanent: true,
         has: [{ type: "host", value: "pitchdeck.jonpagels.com" }],
       },
-    ];
+    );
     // mcp.papermark.com/ → docs. 302 (not 301) so we can repoint later
     // when docs move. The /mcp endpoint and /.well-known/* + /oauth/*
     // paths are rewritten above and take precedence, so this only
@@ -197,7 +200,7 @@ const nextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
 
-    return [
+    const headers = [
       {
         // Default headers for all routes
         source: "/:path*",
@@ -284,21 +287,6 @@ const nextConfig = {
         ],
       },
       {
-        source: "/services/:path*",
-        has: [
-          {
-            type: "host",
-            value: process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST,
-          },
-        ],
-        headers: [
-          {
-            key: "X-Robots-Tag",
-            value: "noindex",
-          },
-        ],
-      },
-      {
         source: "/api/webhooks/services/:path*",
         headers: [
           {
@@ -317,6 +305,26 @@ const nextConfig = {
         ],
       },
     ];
+
+    if (process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST) {
+      headers.push({
+        source: "/services/:path*",
+        has: [
+          {
+            type: "host",
+            value: process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST,
+          },
+        ],
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex",
+          },
+        ],
+      });
+    }
+
+    return headers;
   },
   experimental: {
     // Rewrite barrel imports (e.g. `import { Icon } from "lucide-react"`) to
