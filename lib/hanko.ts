@@ -1,16 +1,20 @@
 import { tenant } from "@teamhanko/passkeys-next-auth-provider";
 
+const hankoApiKey = process.env.HANKO_API_KEY || "build-dummy-key";
+const hankoTenantId =
+  process.env.NEXT_PUBLIC_HANKO_TENANT_ID || "build-dummy-tenant";
+
 if (!process.env.HANKO_API_KEY || !process.env.NEXT_PUBLIC_HANKO_TENANT_ID) {
-  // These need to be set in .env.local
-  // You get them from the Passkey API itself, e.g. when first setting up the server.
-  throw new Error(
-    "Please set HANKO_API_KEY and NEXT_PUBLIC_HANKO_TENANT_ID in your .env.local file.",
+  // Don't throw at build time (Collecting page data imports this module).
+  // Passkeys will fail at runtime until real keys are set in Vercel env.
+  console.warn(
+    "HANKO_API_KEY / NEXT_PUBLIC_HANKO_TENANT_ID missing, using dummy for build.",
   );
 }
 
 const hanko = tenant({
-  apiKey: process.env.HANKO_API_KEY!,
-  tenantId: process.env.NEXT_PUBLIC_HANKO_TENANT_ID!,
+  apiKey: hankoApiKey,
+  tenantId: hankoTenantId,
 });
 
 export default hanko;
