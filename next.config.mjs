@@ -13,8 +13,9 @@ const nextConfig = {
       ? process.env.NEXT_PUBLIC_BASE_URL
       : undefined,
   async redirects() {
-    return [
-      {
+    const redirects = [];
+    if (process.env.NEXT_PUBLIC_APP_BASE_HOST) {
+      redirects.push({
         source: "/",
         destination: "/dashboard",
         permanent: false,
@@ -24,7 +25,9 @@ const nextConfig = {
             value: process.env.NEXT_PUBLIC_APP_BASE_HOST,
           },
         ],
-      },
+      });
+    }
+    redirects.push(
       {
         // temporary redirect set on 2025-10-22
         source: "/view/cmdn06aw00001ju04jgsf8h4f",
@@ -36,12 +39,13 @@ const nextConfig = {
         destination: "/settings/general",
         permanent: false,
       },
-    ];
+    );
+    return redirects;
   },
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
 
-    return [
+    const headers = [
       {
         // Default headers for all routes
         source: "/:path*",
@@ -117,7 +121,7 @@ const nextConfig = {
         has: [
           {
             type: "host",
-            value: process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST,
+            value: process.env.NEXT_PUBLIC_WEBHOOK_BASE_HOST || "localhost",
           },
         ],
         headers: [
@@ -146,6 +150,8 @@ const nextConfig = {
         ],
       },
     ];
+
+    return headers;
   },
   experimental: {
     outputFileTracingIncludes: {
