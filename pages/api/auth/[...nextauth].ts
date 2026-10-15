@@ -121,9 +121,15 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
-        secure: VERCEL_DEPLOYMENT,
+        // Only scope cookies to .papermark.com on the official deployment.
+        // On custom Vercel domains (xxx.vercel.app) the domain must be omitted,
+        // otherwise the browser rejects the session cookie and login loops.
+        domain: process.env.NEXTAUTH_URL?.includes("papermark.com")
+          ? ".papermark.com"
+          : undefined,
+        secure:
+          process.env.NEXTAUTH_URL?.startsWith("https://") ||
+          VERCEL_DEPLOYMENT,
       },
     },
   },
